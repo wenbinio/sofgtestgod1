@@ -329,17 +329,36 @@ if (EventRuntime.fields.ContainsKey("is_agent_cordyceps") == false)
 
 ### Medium Priority
 
-5. **TODO**: Add tutorial message in `afterMapGenAfterHistorical()` explaining Mysteries
-6. **TODO**: Implement hero AI modification via:
+5. **✅ DONE**: Add tutorial message in `afterMapGenAfterHistorical()` explaining Mysteries
+6. **✅ DONE**: Add cheat commands for testing (mystery1, mystery3, fragment1/3/5, seals, echo, amanuensis)
+7. **TODO**: Implement hero AI modification via:
    - Harmony patches for quest utility calculation
    - ModKernel.unitAgentAI() override for non-agent heroes
-7. **TODO**: Add cheat commands for testing (e.g., "mystery1", "fragment3")
 
 ### Low Priority
 
 8. **TODO**: Consider contributing missing hooks upstream to CommunityLib
 9. **TODO**: Add developer comments to complex methods
 10. **TODO**: Consider adding custom event runtime fields if events are added later
+
+---
+
+## Testing Cheat Commands
+
+The following cheat commands are available for testing (following the InsectGod pattern):
+
+| Command | Effect |
+|---------|--------|
+| `mystery1` | Spawns a Stage 1 Mystery at the selected hex |
+| `mystery3` | Sets/spawns a Stage 3 Mystery at the selected hex |
+| `fragment1` | Grants Fragment 1 to the selected unit or location ruler |
+| `fragment3` | Grants Fragment 3 (Seeker) to the selected unit or location ruler |
+| `fragment5` | Grants Fragment 5 (Completion) - triggers immediate erasure |
+| `seals` | Displays current seal advancement progress and thresholds |
+| `echo` | Spawns The Echo at the selected hex (if not already alive) |
+| `amanuensis` | Spawns The Amanuensis at the selected hex (if not already spawned) |
+
+To use: Open the cheat console (usually F1 or ~) and type the command.
 
 ---
 

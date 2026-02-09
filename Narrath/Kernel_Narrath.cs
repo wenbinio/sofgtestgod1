@@ -89,6 +89,171 @@ namespace ShadowsNarrath
             }
         }
 
+        public override void afterMapGenAfterHistorical(Map map)
+        {
+            base.afterMapGenAfterHistorical(map);
+
+            // Only run if Narrath is the active god
+            if (map.overmind.god is God_Narrath == false) { return; }
+
+            // Tutorial message for players
+            map.world.prefabStore.popMsgHint(
+                map.overmind.god.getName() + " is a god whose power grows through investigation, not confrontation. " +
+                "Your Archivist agent can plant Mysteries at infiltrated locations. " +
+                "Heroes will be compelled to investigate these Mysteries, believing them to be threats to resolve. " +
+                "\n\nBut investigation does not destroy Mysteries — it advances them. As heroes study the incomplete utterance, " +
+                "they gain Fragments of understanding, which slowly consume them. The more skilled the investigator, the faster " +
+                "they fall. Your seals break not with time, but with each Mystery stage advancement." +
+                "\n\nSpread Mysteries widely. Let the heroes do your work. Watch them destroy themselves in pursuit of understanding.",
+                map.overmind.god.getName()
+            );
+        }
+
+        public override void onCheatEntered(string command)
+        {
+            // Only run if Narrath is the active god
+            if (map == null) { return; } // For tutorial situations
+            if (map.overmind.god is God_Narrath == false) { return; }
+
+            base.onCheatEntered(command);
+
+            if (command == "mystery1")
+            {
+                // Spawn Stage 1 Mystery at selected location
+                Location loc = GraphicalMap.selectedHex?.location;
+                if (loc != null && narrath != null)
+                {
+                    // Check if Mystery already exists
+                    bool hasMyster = false;
+                    foreach (Property pr in loc.properties)
+                    {
+                        if (pr is Property_Mystery)
+                        {
+                            hasMyster = true;
+                            break;
+                        }
+                    }
+                    if (!hasMyster)
+                    {
+                        Property_Mystery mystery = new Property_Mystery(loc, narrath);
+                        mystery.stage = 1;
+                        loc.properties.Add(mystery);
+                    }
+                }
+            }
+            else if (command == "mystery3")
+            {
+                // Spawn Stage 3 Mystery at selected location
+                Location loc = GraphicalMap.selectedHex?.location;
+                if (loc != null && narrath != null)
+                {
+                    Property_Mystery existing = null;
+                    foreach (Property pr in loc.properties)
+                    {
+                        if (pr is Property_Mystery pm)
+                        {
+                            existing = pm;
+                            break;
+                        }
+                    }
+                    if (existing != null)
+                    {
+                        existing.stage = 3;
+                    }
+                    else
+                    {
+                        Property_Mystery mystery = new Property_Mystery(loc, narrath);
+                        mystery.stage = 3;
+                        loc.properties.Add(mystery);
+                    }
+                }
+            }
+            else if (command == "fragment1")
+            {
+                // Grant Fragment 1 to selected unit
+                if (GraphicalMap.selectedUnit?.person != null)
+                {
+                    SetFragmentLevel(GraphicalMap.selectedUnit.person, 1);
+                }
+                else if (GraphicalMap.selectedHex?.location?.person() != null)
+                {
+                    SetFragmentLevel(GraphicalMap.selectedHex.location.person(), 1);
+                }
+            }
+            else if (command == "fragment3")
+            {
+                // Grant Fragment 3 (Seeker) to selected unit
+                if (GraphicalMap.selectedUnit?.person != null)
+                {
+                    SetFragmentLevel(GraphicalMap.selectedUnit.person, 3);
+                }
+                else if (GraphicalMap.selectedHex?.location?.person() != null)
+                {
+                    SetFragmentLevel(GraphicalMap.selectedHex.location.person(), 3);
+                }
+            }
+            else if (command == "fragment5")
+            {
+                // Grant Fragment 5 (Completion) to selected unit - will trigger erasure
+                if (GraphicalMap.selectedUnit?.person != null)
+                {
+                    SetFragmentLevel(GraphicalMap.selectedUnit.person, 5);
+                }
+                else if (GraphicalMap.selectedHex?.location?.person() != null)
+                {
+                    SetFragmentLevel(GraphicalMap.selectedHex.location.person(), 5);
+                }
+            }
+            else if (command == "seals")
+            {
+                // Show current seal advancement progress
+                if (narrath != null)
+                {
+                    string msg = "Mystery Advancement Count: " + narrath.mysteryAdvancementCount + "\n\n";
+                    for (int i = 0; i < God_Narrath.SEAL_THRESHOLDS.Length; i++)
+                    {
+                        int threshold = God_Narrath.SEAL_THRESHOLDS[i];
+                        bool broken = narrath.mysteryAdvancementCount >= threshold;
+                        msg += "Seal " + (i + 1) + ": " + (broken ? "BROKEN" : "Sealed") + 
+                               " (threshold: " + threshold + ")\n";
+                    }
+                    map.world.prefabStore.popMsg(msg);
+                }
+            }
+            else if (command == "echo")
+            {
+                // Spawn The Echo at selected location
+                Location loc = GraphicalMap.selectedHex?.location;
+                if (loc != null && narrath != null)
+                {
+                    if (!echoAlive)
+                    {
+                        UA_Echo echo = new UA_Echo(loc, map.overmind);
+                        map.units.Add(echo);
+                        loc.units.Add(echo);
+                        echoAlive = true;
+                        echoRespawnTimer = -1;
+                    }
+                }
+            }
+            else if (command == "amanuensis")
+            {
+                // Spawn The Amanuensis at selected location
+                Location loc = GraphicalMap.selectedHex?.location;
+                if (loc != null && narrath != null)
+                {
+                    if (!amanuensisSpawned)
+                    {
+                        UA_Amanuensis amanuensis = new UA_Amanuensis(loc, map.overmind);
+                        map.units.Add(amanuensis);
+                        loc.units.Add(amanuensis);
+                        amanuensisSpawned = true;
+                        amanuensisAlive = true;
+                    }
+                }
+            }
+        }
+
         public override void onTurnStart(Map map)
         {
             // Only run if Narrath is the active god
