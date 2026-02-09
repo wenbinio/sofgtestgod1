@@ -10,6 +10,13 @@ namespace ShadowsNarrath
         public static Kernel_Narrath instance;
         public static God_Narrath narrath;
 
+        // Fragment spread chance constants
+        public const double FRAGMENT_2_SPREAD_CHANCE = 0.15;
+        public const double SEEKER_BASE_SPREAD_CHANCE = 0.25;
+        public const double SEEKER_PROXIMITY_SPREAD_BONUS = 0.05;
+        public const int FRAGMENT_4_AUTO_SPREAD_TURNS = 10;
+        public const double FRAGMENT_4_SILENCE_CHANCE = 1.0 / 30.0;
+
         // Fragment tracking: maps Person to their Fragment level (0-5)
         public Dictionary<Person, int> fragmentLevels = new Dictionary<Person, int>();
 
@@ -211,14 +218,14 @@ namespace ShadowsNarrath
 
                     // Calculate spread chance
                     double chance = 0;
-                    if (level == 2) chance = 0.15;
+                    if (level == 2) chance = FRAGMENT_2_SPREAD_CHANCE;
                     else if (level >= 3)
                     {
-                        chance = 0.25;
+                        chance = SEEKER_BASE_SPREAD_CHANCE;
                         // Seekers get +5% per turn in same location
                         if (seekerProximityTurns.ContainsKey(person))
                         {
-                            chance += 0.05 * seekerProximityTurns[person];
+                            chance += SEEKER_PROXIMITY_SPREAD_BONUS * seekerProximityTurns[person];
                             seekerProximityTurns[person]++;
                         }
                         else
@@ -234,7 +241,7 @@ namespace ShadowsNarrath
                             seekerProximityTurns[person] = 0;
                         seekerProximityTurns[person]++;
 
-                        if (seekerProximityTurns[person] >= 10)
+                        if (seekerProximityTurns[person] >= FRAGMENT_4_AUTO_SPREAD_TURNS)
                         {
                             if (!spreadTargets.ContainsKey(target) || spreadTargets[target] < targetFragment + 1)
                                 spreadTargets[target] = targetFragment + 1;
@@ -268,7 +275,7 @@ namespace ShadowsNarrath
                 if (loc == null) continue;
 
                 // ~1/30 chance per turn
-                if (Eleven.random.NextDouble() < 1.0 / 30.0)
+                if (Eleven.random.NextDouble() < FRAGMENT_4_SILENCE_CHANCE)
                 {
                     foreach (Unit u in loc.units)
                     {

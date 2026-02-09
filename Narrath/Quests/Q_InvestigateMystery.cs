@@ -86,7 +86,8 @@ namespace ShadowsNarrath
 
             // Add investigation progress based on hero's Lore stat
             int lore = hero.stat_lore + Kernel_Narrath.instance.GetStatModifier(hero, "lore");
-            int progress = getComplexity() * (Math.Max(1, lore) / 3);
+            int effectiveLore = Math.Max(1, lore);
+            int progress = (int)(getComplexity() * (effectiveLore / 3.0));
             mystery.AddInvestigationProgress(progress);
 
             // Grant Fragments based on Mystery stage at time of completion

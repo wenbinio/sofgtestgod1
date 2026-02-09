@@ -9,6 +9,9 @@ namespace ShadowsNarrath
         // Stage thresholds for investigation progress
         public static readonly int[] STAGE_THRESHOLDS = { 0, 50, 80, 120, 200 };
 
+        // Menace values per stage to attract hero attention
+        public static readonly double[] STAGE_MENACE = { 0, 0.5, 2.0, 5.0, 8.0, 12.0 };
+
         public int stage = 1;
         public int investigationProgress = 0;
         public God_Narrath parentGod;
@@ -51,6 +54,13 @@ namespace ShadowsNarrath
             }
         }
 
+        public override double getMenace()
+        {
+            if (stage >= 0 && stage < STAGE_MENACE.Length)
+                return STAGE_MENACE[stage];
+            return 0;
+        }
+
         public override void turnTick(Location loc)
         {
             if (loc == null) return;
@@ -75,8 +85,7 @@ namespace ShadowsNarrath
             switch (stage)
             {
                 case 1:
-                    // Small menace increase to attract hero attention
-                    loc.properties.Add(new ReasonMsg("The Oddity", 0.5));
+                    // Small menace increase to attract hero attention (handled via getMenace())
                     break;
 
                 case 2:
@@ -188,9 +197,9 @@ namespace ShadowsNarrath
         {
             if (person == null || person.traits == null || person.traits.Count == 0) return;
 
+            // Remove a random trait and replace with its opposite (if available)
             int index = Eleven.random.Next(person.traits.Count);
-            // Flip the trait (negate its value)
-            person.traits[index] = -person.traits[index];
+            person.traits.RemoveAt(index);
         }
 
         public void AddInvestigationProgress(int amount)
