@@ -55,7 +55,29 @@ namespace ShadowsNarrath
 
         public override void afterMapGen(Map map)
         {
+            // Only initialize if Narrath is the active god
+            if (map.overmind.god is God_Narrath == false) { return; }
+
             // Register CommunityLib hooks
+            foreach (ModKernel mk in map.mods)
+            {
+                if (mk is CommunityLib.ModCore communityCore)
+                {
+                    Hooks_Narrath hooks = new Hooks_Narrath(map);
+                    hooks.RegisterHooks();
+                    break;
+                }
+            }
+        }
+
+        public override void afterLoading(Map map)
+        {
+            base.afterLoading(map);
+
+            // Only initialize if Narrath is the active god
+            if (map.overmind.god is God_Narrath == false) { return; }
+
+            // Re-register CommunityLib hooks after loading
             foreach (ModKernel mk in map.mods)
             {
                 if (mk is CommunityLib.ModCore communityCore)
@@ -69,6 +91,9 @@ namespace ShadowsNarrath
 
         public override void onTurnStart(Map map)
         {
+            // Only run if Narrath is the active god
+            if (map.overmind.god is God_Narrath == false) { return; }
+
             // Find our god instance
             if (narrath == null)
             {
@@ -171,6 +196,9 @@ namespace ShadowsNarrath
 
         public override void onTurnEnd(Map map)
         {
+            // Only run if Narrath is the active god
+            if (map.overmind.god is God_Narrath == false) { return; }
+
             if (narrath == null) return;
 
             ProcessFragmentEffects(map);
@@ -531,6 +559,9 @@ namespace ShadowsNarrath
         // World panic integration
         public override void populatingWorldPanicReasons(List<ReasonMsg> reasons, Map map)
         {
+            // Only run if Narrath is the active god
+            if (map.overmind.god is God_Narrath == false) { return; }
+
             if (narrath == null) return;
 
             // Count Fragment 5 completions (tracked via score)

@@ -7,11 +7,8 @@ namespace ShadowsNarrath
 {
     public class Hooks_Narrath : Hooks
     {
-        public Map map;
-
-        public Hooks_Narrath(Map map) : base()
+        public Hooks_Narrath(Map map) : base(map)
         {
-            this.map = map;
         }
 
         public void RegisterHooks()
@@ -20,6 +17,12 @@ namespace ShadowsNarrath
             CommunityLib.HookManager.RegisterHooks(this);
         }
 
+        // NOTE: The following hooks were designed for Narrath's hero AI modification needs
+        // but are NOT currently available in CommunityLib. These methods will never be called.
+        // Alternative implementations are needed via ModKernel overrides or Harmony patches.
+        // TODO: Either contribute these hooks to CommunityLib or implement via Harmony patches
+
+        /*
         // Hook: Modify hero quest utility to prioritize Mystery investigation
         public override double onGetQuestUtility(Quest quest, Person hero, double currentUtility)
         {
@@ -182,5 +185,12 @@ namespace ShadowsNarrath
 
             return false;
         }
+        */
+
+        // NOTE: The above hooks don't exist in CommunityLib yet. 
+        // Hero AI modification will need to be implemented through:
+        // 1. Harmony patches on quest selection logic
+        // 2. ModKernel.unitAgentAI() for non-agent hero behavior
+        // 3. Direct manipulation in Quest.onComplete() callbacks
     }
 }
