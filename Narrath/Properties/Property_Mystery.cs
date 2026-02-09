@@ -66,9 +66,12 @@ namespace ShadowsNarrath
             if (loc == null) return;
 
             // Check if warded
-            if (Kernel_Narrath.instance != null && Kernel_Narrath.instance.activeWards.ContainsKey(loc))
+            bool isWarded = Kernel_Narrath.instance != null && Kernel_Narrath.instance.activeWards.ContainsKey(loc);
+
+            if (isWarded)
             {
-                // Ward of Silence active: no progression, halved Fragment exposure
+                // Ward of Silence active: no progression, but halved Fragment exposure still applies
+                ApplyStageEffects(loc, true);
                 return;
             }
 
@@ -77,10 +80,10 @@ namespace ShadowsNarrath
                 annotationBoostTurns--;
 
             // Apply stage effects
-            ApplyStageEffects(loc);
+            ApplyStageEffects(loc, false);
         }
 
-        private void ApplyStageEffects(Location loc)
+        private void ApplyStageEffects(Location loc, bool isWarded)
         {
             switch (stage)
             {
@@ -89,26 +92,28 @@ namespace ShadowsNarrath
                     break;
 
                 case 2:
-                    // Madness +0.5/turn
-                    AddMadness(loc, 0.5);
+                    // Madness +0.5/turn (suppressed by ward)
+                    if (!isWarded) AddMadness(loc, 0.5);
                     break;
 
                 case 3:
-                    // Madness +1.0/turn
-                    AddMadness(loc, 1.0);
-                    // Grant Fragment 1 to all heroes/rulers at this location
-                    GrantFragmentsAtLocation(loc, 1);
+                    // Madness +1.0/turn (suppressed by ward)
+                    if (!isWarded) AddMadness(loc, 1.0);
+                    // Grant Fragment 1 to all heroes/rulers at this location (halved chance if warded)
+                    if (!isWarded || Eleven.random.NextDouble() < 0.5)
+                        GrantFragmentsAtLocation(loc, 1);
                     break;
 
                 case 4:
-                    // Madness +2.0/turn
-                    AddMadness(loc, 2.0);
-                    // All heroes/rulers who pass through gain Fragment 1
-                    GrantFragmentsAtLocation(loc, 1);
-                    // Population decline: -1% per turn
-                    ApplyPopulationDecline(loc, 0.01);
-                    // Ruler personality erosion
-                    if (loc.settlement != null && loc.settlement.ruler != null)
+                    // Madness +2.0/turn (suppressed by ward)
+                    if (!isWarded) AddMadness(loc, 2.0);
+                    // All heroes/rulers who pass through gain Fragment 1 (halved chance if warded)
+                    if (!isWarded || Eleven.random.NextDouble() < 0.5)
+                        GrantFragmentsAtLocation(loc, 1);
+                    // Population decline: -1% per turn (suppressed by ward)
+                    if (!isWarded) ApplyPopulationDecline(loc, 0.01);
+                    // Ruler personality erosion (suppressed by ward)
+                    if (!isWarded && loc.settlement != null && loc.settlement.ruler != null)
                     {
                         if (Eleven.random.NextDouble() < 1.0 / 20.0)
                         {
@@ -118,10 +123,10 @@ namespace ShadowsNarrath
                     break;
 
                 case 5:
-                    // Madness +3.0/turn
-                    AddMadness(loc, 3.0);
+                    // Madness +3.0/turn (suppressed by ward)
+                    if (!isWarded) AddMadness(loc, 3.0);
                     // Heroes cannot voluntarily leave (handled in Hooks_Narrath)
-                    // Connected locations: Fragment 1 exposure for heroes/rulers present
+                    // Connected locations: Fragment 1 exposure for heroes/rulers present (halved chance if warded)
                     if (loc.links != null)
                     {
                         foreach (Link link in loc.links)
@@ -129,12 +134,13 @@ namespace ShadowsNarrath
                             Location connected = link.other(loc);
                             if (connected != null)
                             {
-                                GrantFragmentsAtLocation(connected, 1);
+                                if (!isWarded || Eleven.random.NextDouble() < 0.5)
+                                    GrantFragmentsAtLocation(connected, 1);
                             }
                         }
                     }
-                    // Population decline: -3% per turn
-                    ApplyPopulationDecline(loc, 0.03);
+                    // Population decline: -3% per turn (suppressed by ward)
+                    if (!isWarded) ApplyPopulationDecline(loc, 0.03);
                     break;
             }
         }
