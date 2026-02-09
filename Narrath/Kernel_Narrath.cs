@@ -561,53 +561,29 @@ namespace ShadowsNarrath
                 }
             }
 
-            // Decrement compel timers (collect updates first to avoid modifying dictionary during iteration)
-            List<Person> expiredCompels = new List<Person>();
-            Dictionary<Person, int> updatedCompels = new Dictionary<Person, int>();
+            // Decrement compel timers (rebuild to avoid modifying dictionary during iteration)
+            Dictionary<Person, int> newCompels = new Dictionary<Person, int>();
             foreach (var kvp in compelledHeroes)
             {
                 int remaining = kvp.Value - 1;
-                if (remaining <= 0)
+                if (remaining > 0)
                 {
-                    expiredCompels.Add(kvp.Key);
-                }
-                else
-                {
-                    updatedCompels[kvp.Key] = remaining;
+                    newCompels[kvp.Key] = remaining;
                 }
             }
-            foreach (Person p in expiredCompels)
-            {
-                compelledHeroes.Remove(p);
-            }
-            foreach (var kvp in updatedCompels)
-            {
-                compelledHeroes[kvp.Key] = kvp.Value;
-            }
+            compelledHeroes = newCompels;
 
-            // Decrement burn writings suppression (collect updates first to avoid modifying dictionary during iteration)
-            List<Person> expiredBurn = new List<Person>();
-            Dictionary<Person, int> updatedBurn = new Dictionary<Person, int>();
+            // Decrement burn writings suppression (rebuild to avoid modifying dictionary during iteration)
+            Dictionary<Person, int> newBurn = new Dictionary<Person, int>();
             foreach (var kvp in burnWritingsSuppression)
             {
                 int remaining = kvp.Value - 1;
-                if (remaining <= 0)
+                if (remaining > 0)
                 {
-                    expiredBurn.Add(kvp.Key);
-                }
-                else
-                {
-                    updatedBurn[kvp.Key] = remaining;
+                    newBurn[kvp.Key] = remaining;
                 }
             }
-            foreach (Person p in expiredBurn)
-            {
-                burnWritingsSuppression.Remove(p);
-            }
-            foreach (var kvp in updatedBurn)
-            {
-                burnWritingsSuppression[kvp.Key] = kvp.Value;
-            }
+            burnWritingsSuppression = newBurn;
         }
 
         public override void onTurnEnd(Map map)
