@@ -1,0 +1,9 @@
+{
+  "name": "Narrath, That Which Was Half-Spoken",
+  "author": "Narrath Mod Team",
+  "description": "An Elder God whose core mechanic inverts the game's usual dynamic: instead of creating threats that heroes counter, Narrath creates Mysteries that heroes are compelled to investigate, and their investigation is itself the vector of apocalypse. The more competent the heroes, the faster they destroy themselves.",
+  "version": "0.1.0",
+  "gameVersion": "1.0",
+  "dependencies": ["CommunityLib"],
+  "tags": ["God", "Elder God", "Narrath"]
+}
