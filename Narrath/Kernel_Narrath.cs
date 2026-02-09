@@ -48,6 +48,11 @@ namespace ShadowsNarrath
             instance = this;
         }
 
+        public override void onStartGamePresssed(Map map, List<God> gods)
+        {
+            gods.Add(new God_Narrath());
+        }
+
         public override void afterMapGen(Map map)
         {
             // Register CommunityLib hooks

@@ -17,31 +17,30 @@ namespace ShadowsNarrath
         // Completion counter for panic/scoring
         public int completionCount = 0;
 
-        public God_Narrath(Map map) : base(map)
+        public override string getName()
         {
-            this.name = "Narrath, That Which Was Half-Spoken";
-            this.description = "An incomplete cosmic utterance — a sentence begun at the dawn of reality that was never finished. " +
-                "Those who encounter fragments of it cannot resist trying to complete it, and the pursuit of that completion consumes them. " +
-                "Narrath creates Mysteries that heroes are compelled to investigate, and their investigation is itself the vector of apocalypse.";
+            return "Narrath, That Which Was Half-Spoken";
+        }
 
-            // Standard 9 seals
-            this.nSeals = 9;
+        public override void setup(Map map)
+        {
+            base.setup(map);
 
-            // Starting power
-            this.maxPower = 1;
-            this.power = 1;
-
-            // Agent recruitment points
-            this.agentCap = 2;
-
-            // Register powers
-            this.powers.Add(new P_Whisper(map));           // Seal 0
-            this.powers.Add(new P_Palimpsest(map));        // Seal 2
-            this.powers.Add(new P_CompelInvestigation(map)); // Seal 3
-            this.powers.Add(new P_Redaction(map));         // Seal 5
-            this.powers.Add(new P_Glossolalia(map));       // Seal 6
-            this.powers.Add(new P_Unwriting(map));         // Seal 7
-            this.powers.Add(new P_TheCompletion(map));     // Seal 9
+            // Register powers with seal level requirements
+            powers.Add(new P_Whisper(map));                // Seal 0
+            powerLevelReqs.Add(0);
+            powers.Add(new P_Palimpsest(map));             // Seal 2
+            powerLevelReqs.Add(2);
+            powers.Add(new P_CompelInvestigation(map));    // Seal 3
+            powerLevelReqs.Add(3);
+            powers.Add(new P_Redaction(map));              // Seal 5
+            powerLevelReqs.Add(5);
+            powers.Add(new P_Glossolalia(map));            // Seal 6
+            powerLevelReqs.Add(6);
+            powers.Add(new P_Unwriting(map));              // Seal 7
+            powerLevelReqs.Add(7);
+            powers.Add(new P_TheCompletion(map));          // Seal 9
+            powerLevelReqs.Add(9);
         }
 
         public override void onStart(Map map)
@@ -152,10 +151,22 @@ namespace ShadowsNarrath
             return score;
         }
 
-        public override Sprite getGodPortrait()
+        public override Sprite getGodPortrait(World world)
         {
             // Load from Art/god_narrath.png if available
             return EventManager.getImg("ShadowsNarrath.god_narrath.png");
+        }
+
+        public override string getDescFlavour()
+        {
+            return "An incomplete cosmic utterance — a sentence begun at the dawn of reality that was never finished. " +
+                "Those who encounter fragments of it cannot resist trying to complete it, and the pursuit of that completion consumes them.";
+        }
+
+        public override string getDescMechanics()
+        {
+            return "Narrath creates Mysteries that heroes are compelled to investigate, and their investigation is itself the vector of apocalypse. " +
+                "The more competent the heroes, the faster they destroy themselves.";
         }
     }
 }
