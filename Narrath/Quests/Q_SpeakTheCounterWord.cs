@@ -54,14 +54,14 @@ namespace ShadowsNarrath
             // Reduce Mystery by 1 stage
             mystery.stage--;
 
+            // Reset investigation progress for the current stage
+            mystery.investigationProgress = 0;
+
             if (mystery.stage <= 0)
             {
                 // Remove the Mystery entirely
                 mystery.location.properties.Remove(mystery);
             }
-
-            // Reset investigation progress for the current stage
-            mystery.investigationProgress = 0;
         }
     }
 }

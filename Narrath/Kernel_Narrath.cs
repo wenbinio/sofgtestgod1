@@ -252,6 +252,239 @@ namespace ShadowsNarrath
                     }
                 }
             }
+            else if (command == "mystery5")
+            {
+                // Spawn or advance to Stage 5 Mystery at selected location
+                Location loc = GraphicalMap.selectedHex?.location;
+                if (loc != null && narrath != null)
+                {
+                    Property_Mystery existing = null;
+                    foreach (Property pr in loc.properties)
+                    {
+                        if (pr is Property_Mystery pm)
+                        {
+                            existing = pm;
+                            break;
+                        }
+                    }
+                    if (existing != null)
+                    {
+                        existing.stage = 5;
+                    }
+                    else
+                    {
+                        Property_Mystery mystery = new Property_Mystery(loc, narrath);
+                        mystery.stage = 5;
+                        loc.properties.Add(mystery);
+                    }
+                }
+            }
+            else if (command == "advmystery")
+            {
+                // Advance existing Mystery by 1 stage at selected location (tests AdvanceStage logic)
+                Location loc = GraphicalMap.selectedHex?.location;
+                if (loc != null)
+                {
+                    foreach (Property pr in loc.properties)
+                    {
+                        if (pr is Property_Mystery pm)
+                        {
+                            pm.AdvanceStage();
+                            map.world.prefabStore.popMsg("Mystery advanced to Stage " + pm.stage);
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (command == "addinvprog")
+            {
+                // Add 50 investigation progress to Mystery at selected location
+                Location loc = GraphicalMap.selectedHex?.location;
+                if (loc != null)
+                {
+                    foreach (Property pr in loc.properties)
+                    {
+                        if (pr is Property_Mystery pm)
+                        {
+                            pm.AddInvestigationProgress(50);
+                            map.world.prefabStore.popMsg("Added 50 investigation progress. Total: " + pm.investigationProgress + ", Stage: " + pm.stage);
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (command == "diagnose")
+            {
+                // Comprehensive state diagnostic
+                string msg = "=== NARRATH DIAGNOSTICS ===\n\n";
+
+                // Fragment tracking
+                msg += "FRAGMENTS (" + fragmentLevels.Count + " tracked):\n";
+                int[] fragmentCounts = new int[6];
+                int deadFragments = 0;
+                foreach (var kvp in fragmentLevels)
+                {
+                    if (kvp.Key == null || kvp.Key.isDead)
+                    {
+                        deadFragments++;
+                        continue;
+                    }
+                    if (kvp.Value >= 0 && kvp.Value <= 5)
+                        fragmentCounts[kvp.Value]++;
+                }
+                for (int i = 1; i <= 5; i++)
+                    msg += "  Fragment " + i + ": " + fragmentCounts[i] + " characters\n";
+                if (deadFragments > 0)
+                    msg += "  WARNING: " + deadFragments + " dead/null entries (will be cleaned)\n";
+
+                // Mysteries
+                int[] mysteryCounts = new int[6];
+                int totalMysteries = 0;
+                foreach (Location loc in map.locations)
+                {
+                    if (loc == null) continue;
+                    foreach (Property pr in loc.properties)
+                    {
+                        if (pr is Property_Mystery pm)
+                        {
+                            totalMysteries++;
+                            if (pm.stage >= 1 && pm.stage <= 5)
+                                mysteryCounts[pm.stage]++;
+                            break;
+                        }
+                    }
+                }
+                msg += "\nMYSTERIES (" + totalMysteries + " total):\n";
+                for (int i = 1; i <= 5; i++)
+                    msg += "  Stage " + i + ": " + mysteryCounts[i] + "\n";
+
+                // Seals
+                if (narrath != null)
+                {
+                    msg += "\nSEALS:\n";
+                    msg += "  Advancement count: " + narrath.mysteryAdvancementCount + "\n";
+                    int brokenCount = 0;
+                    for (int i = 0; i < God_Narrath.SEAL_THRESHOLDS.Length; i++)
+                    {
+                        if (narrath.mysteryAdvancementCount >= God_Narrath.SEAL_THRESHOLDS[i])
+                            brokenCount++;
+                    }
+                    msg += "  Broken seals: " + brokenCount + "/9\n";
+                    if (brokenCount < 9)
+                        msg += "  Next seal at: " + God_Narrath.SEAL_THRESHOLDS[brokenCount] + "\n";
+                }
+
+                // Active effects
+                msg += "\nACTIVE EFFECTS:\n";
+                msg += "  Compelled heroes: " + compelledHeroes.Count + "\n";
+                msg += "  Silenced heroes: " + silencedHeroes.Count + "\n";
+                msg += "  Active wards: " + activeWards.Count + "\n";
+                msg += "  Burn suppression: " + burnWritingsSuppression.Count + "\n";
+                msg += "  Proximity tracking: " + seekerProximityTurns.Count + "\n";
+
+                // Agent status
+                msg += "\nAGENTS:\n";
+                msg += "  Echo alive: " + echoAlive + "\n";
+                if (!echoAlive && echoRespawnTimer > 0)
+                    msg += "  Echo respawn in: " + echoRespawnTimer + " turns\n";
+                msg += "  Amanuensis spawned: " + amanuensisSpawned + "\n";
+                msg += "  Amanuensis alive: " + amanuensisAlive + "\n";
+
+                // Apocalypse score
+                if (narrath != null)
+                {
+                    msg += "\nSCORING:\n";
+                    msg += "  Completions: " + narrath.completionCount + "\n";
+                    msg += "  Apocalypse score: " + narrath.getApocalypseScore(map).ToString("F1") + "\n";
+                }
+
+                map.world.prefabStore.popMsg(msg);
+            }
+            else if (command == "testcascade")
+            {
+                // Test cascade: create 3 mysteries and 3 seekers to verify cascade mechanics
+                if (narrath == null) return;
+                int placed = 0;
+                foreach (Location loc in map.locations)
+                {
+                    if (loc == null || loc.settlement == null) continue;
+                    if (placed >= 3) break;
+
+                    bool hasMystery = false;
+                    foreach (Property pr in loc.properties)
+                    {
+                        if (pr is Property_Mystery) { hasMystery = true; break; }
+                    }
+                    if (!hasMystery)
+                    {
+                        Property_Mystery mystery = new Property_Mystery(loc, narrath);
+                        mystery.stage = 3;
+                        loc.properties.Add(mystery);
+                        placed++;
+                    }
+                }
+
+                int seekersMade = 0;
+                foreach (Unit u in map.units)
+                {
+                    if (u == null || u.person == null) continue;
+                    if (seekersMade >= 3) break;
+                    if (u.person.isHero() && GetFragmentLevel(u.person) < 3)
+                    {
+                        SetFragmentLevel(u.person, 3);
+                        seekersMade++;
+                    }
+                }
+
+                map.world.prefabStore.popMsg("Test cascade setup: " + placed + " Stage 3 Mysteries, " + seekersMade + " Seekers created.\nUse 'diagnose' to monitor state changes over turns.");
+            }
+            else if (command == "breakseal")
+            {
+                // Add enough advancement to break the next seal
+                if (narrath != null)
+                {
+                    int currentBroken = 0;
+                    for (int i = 0; i < God_Narrath.SEAL_THRESHOLDS.Length; i++)
+                    {
+                        if (narrath.mysteryAdvancementCount >= God_Narrath.SEAL_THRESHOLDS[i])
+                            currentBroken++;
+                    }
+                    if (currentBroken < God_Narrath.SEAL_THRESHOLDS.Length)
+                    {
+                        narrath.mysteryAdvancementCount = God_Narrath.SEAL_THRESHOLDS[currentBroken];
+                        map.world.prefabStore.popMsg("Seal " + (currentBroken + 1) + " broken! Advancement set to " + narrath.mysteryAdvancementCount);
+                    }
+                    else
+                    {
+                        map.world.prefabStore.popMsg("All seals already broken.");
+                    }
+                }
+            }
+            else if (command == "narrath_help")
+            {
+                // Show all available cheat commands
+                string msg = "=== NARRATH CHEAT COMMANDS ===\n\n";
+                msg += "MYSTERIES:\n";
+                msg += "  mystery1 - Place Stage 1 Mystery at selected hex\n";
+                msg += "  mystery3 - Place/set Stage 3 Mystery at selected hex\n";
+                msg += "  mystery5 - Place/set Stage 5 Mystery at selected hex\n";
+                msg += "  advmystery - Advance Mystery by 1 stage at selected hex\n";
+                msg += "  addinvprog - Add 50 investigation progress at selected hex\n";
+                msg += "\nFRAGMENTS:\n";
+                msg += "  fragment1 - Grant Fragment 1 to selected unit\n";
+                msg += "  fragment3 - Grant Fragment 3 (Seeker) to selected unit\n";
+                msg += "  fragment5 - Grant Fragment 5 (Completion) to selected unit\n";
+                msg += "\nAGENTS:\n";
+                msg += "  echo - Spawn The Echo at selected hex\n";
+                msg += "  amanuensis - Spawn The Amanuensis at selected hex\n";
+                msg += "\nSEALS & DIAGNOSTICS:\n";
+                msg += "  seals - Show seal advancement status\n";
+                msg += "  breakseal - Break the next seal\n";
+                msg += "  diagnose - Full state diagnostic\n";
+                msg += "  testcascade - Setup 3 mysteries + 3 seekers for cascade test\n";
+                msg += "  narrath_help - Show this help message\n";
+                map.world.prefabStore.popMsg(msg);
+            }
         }
 
         public override void onTurnStart(Map map)
@@ -328,35 +561,29 @@ namespace ShadowsNarrath
                 }
             }
 
-            // Decrement compel timers
-            List<Person> expiredCompels = new List<Person>();
+            // Decrement compel timers (rebuild to avoid modifying dictionary during iteration)
+            Dictionary<Person, int> newCompels = new Dictionary<Person, int>();
             foreach (var kvp in compelledHeroes)
             {
-                compelledHeroes[kvp.Key] = kvp.Value - 1;
-                if (kvp.Value - 1 <= 0)
+                int remaining = kvp.Value - 1;
+                if (remaining > 0)
                 {
-                    expiredCompels.Add(kvp.Key);
+                    newCompels[kvp.Key] = remaining;
                 }
             }
-            foreach (Person p in expiredCompels)
-            {
-                compelledHeroes.Remove(p);
-            }
+            compelledHeroes = newCompels;
 
-            // Decrement burn writings suppression
-            List<Person> expiredBurn = new List<Person>();
+            // Decrement burn writings suppression (rebuild to avoid modifying dictionary during iteration)
+            Dictionary<Person, int> newBurn = new Dictionary<Person, int>();
             foreach (var kvp in burnWritingsSuppression)
             {
-                burnWritingsSuppression[kvp.Key] = kvp.Value - 1;
-                if (kvp.Value - 1 <= 0)
+                int remaining = kvp.Value - 1;
+                if (remaining > 0)
                 {
-                    expiredBurn.Add(kvp.Key);
+                    newBurn[kvp.Key] = remaining;
                 }
             }
-            foreach (Person p in expiredBurn)
-            {
-                burnWritingsSuppression.Remove(p);
-            }
+            burnWritingsSuppression = newBurn;
         }
 
         public override void onTurnEnd(Map map)
@@ -372,7 +599,7 @@ namespace ShadowsNarrath
 
         private void ProcessFragmentEffects(Map map)
         {
-            // Clean up dead/removed persons
+            // Clean up dead/removed persons from all tracking dictionaries
             List<Person> toRemove = new List<Person>();
             foreach (var kvp in fragmentLevels)
             {
@@ -384,6 +611,8 @@ namespace ShadowsNarrath
             foreach (Person p in toRemove)
             {
                 fragmentLevels.Remove(p);
+                seekerProximityTurns.Remove(p);
+                burnWritingsSuppression.Remove(p);
             }
 
             // Process lateral spread for Fragment 2+ characters
@@ -417,7 +646,7 @@ namespace ShadowsNarrath
                     // Calculate spread chance
                     double chance = 0;
                     if (level == 2) chance = FRAGMENT_2_SPREAD_CHANCE;
-                    else if (level >= 3)
+                    else if (level == 3)
                     {
                         chance = SEEKER_BASE_SPREAD_CHANCE;
                         // Seekers get +5% per turn in same location
@@ -432,7 +661,7 @@ namespace ShadowsNarrath
                         }
                     }
 
-                    // Fragment 4: automatic spread, no chance roll
+                    // Fragment 4+: automatic spread, no chance roll
                     if (level >= 4)
                     {
                         if (!seekerProximityTurns.ContainsKey(person))
@@ -683,41 +912,53 @@ namespace ShadowsNarrath
 
             if (saveData == null || saveData.Length == 0) return;
 
-            int index = 0;
-
-            // Load fragment data
-            int fragmentCount = saveData[index++];
-            for (int i = 0; i < fragmentCount; i++)
+            try
             {
-                int personIdx = saveData[index++];
-                int level = saveData[index++];
-                Person p = map.personByIndex(personIdx);
-                if (p != null)
+                int index = 0;
+
+                // Load fragment data
+                if (index >= saveData.Length) return;
+                int fragmentCount = saveData[index++];
+                for (int i = 0; i < fragmentCount; i++)
                 {
-                    fragmentLevels[p] = level;
+                    if (index + 1 >= saveData.Length) return;
+                    int personIdx = saveData[index++];
+                    int level = saveData[index++];
+                    Person p = map.personByIndex(personIdx);
+                    if (p != null)
+                    {
+                        fragmentLevels[p] = level;
+                    }
+                }
+
+                // Load seal advancement progress
+                if (index >= saveData.Length) return;
+                int advCount = saveData[index++];
+
+                // Load echo state
+                if (index + 1 >= saveData.Length) return;
+                echoAlive = saveData[index++] == 1;
+                echoRespawnTimer = saveData[index++];
+
+                // Load amanuensis state
+                if (index + 1 >= saveData.Length) return;
+                amanuensisSpawned = saveData[index++] == 1;
+                amanuensisAlive = saveData[index++] == 1;
+
+                // Find our god and restore state
+                foreach (God g in map.overmind.gods)
+                {
+                    if (g is God_Narrath gn)
+                    {
+                        narrath = gn;
+                        narrath.mysteryAdvancementCount = advCount;
+                        break;
+                    }
                 }
             }
-
-            // Load seal advancement progress
-            int advCount = saveData[index++];
-
-            // Load echo state
-            echoAlive = saveData[index++] == 1;
-            echoRespawnTimer = saveData[index++];
-
-            // Load amanuensis state
-            amanuensisSpawned = saveData[index++] == 1;
-            amanuensisAlive = saveData[index++] == 1;
-
-            // Find our god and restore state
-            foreach (God g in map.overmind.gods)
+            catch (IndexOutOfRangeException)
             {
-                if (g is God_Narrath gn)
-                {
-                    narrath = gn;
-                    narrath.mysteryAdvancementCount = advCount;
-                    break;
-                }
+                // Gracefully handle corrupted save data
             }
         }
 
